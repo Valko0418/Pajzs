@@ -769,8 +769,8 @@ async function initFirebase(){
 
   try{
     // Firebase compat SDK betöltése
-    await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-    await loadScript('https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js');
+    await loadScript('https://unpkg.com/firebase@9.23.0/firebase-app-compat.js');
+    await loadScript('https://unpkg.com/firebase@9.23.0/firebase-database-compat.js');
 
     if(!firebase.apps.length) firebase.initializeApp(FB_CFG);
     fdb = firebase.database();
@@ -787,13 +787,14 @@ async function initFirebase(){
 
     clearTimeout(connectTimeout);
 
-    // Állomások feltöltése ha üres
+    // Állomások: csak olvasás, NEM írunk felül semmit
     const stSnap = await fdb.ref('stations_cc2').once('value');
-    if(!stSnap.exists() || !stSnap.val()['Szegedi HTP']?.units?.['Szeged/1']){
-      await fdb.ref('stations_cc2').set(DEFAULT_STATIONS);
-    } else {
+    if(stSnap.exists()){
       stations = stSnap.val();
       saveData('tir_st2', stations);
+    } else {
+      // Csak akkor írjuk fel ha teljesen üres az adatbázis
+      await fdb.ref('stations_cc2').set(DEFAULT_STATIONS);
     }
 
     // Élő figyelők
